@@ -187,6 +187,8 @@ The executor should only call one `resolve` or one `reject` call. Any state chan
 
 A promise object is the link between the executor (the consumer) and the consumers, which can receive results or an error. **Consuming functions can be registered** using the methods `.then`, `.catch`, or `.finally`. 
 
+#### Then
+
 ```javascript
 promise.then(
     function(result) {/* Handle a successful result*/},
@@ -211,3 +213,31 @@ promise.then(
 ```
 
 If we're interested in only successful completions then we can provide only one argument to `.then`.
+
+#### Catch
+
+If we're interested in only errors, then we can pass null as the first argument to `.then`, or we can use the `.catch` function.
+
+```javascript
+let promise = new Promise((resolve, reject) => {
+  setTimeout(() => reject(new Error("Whoops!")), 1000);
+});
+
+promise.catch(alert); 
+```
+
+#### Finally
+
+Just like there is a `finally` clause in try/catch blocks. Finally runs no matter what. It is a good clause to use for performing cleanup, stopping or loading indicators, etc.
+
+With finally we don't know if the process is successful or not. It passes through results and errors to the next handler
+
+```javascript
+new Promise((resolve, reject) => {
+  /* do something that takes time, and then call resolve/reject */
+})
+  // runs when the promise is settled, doesn't matter successfully or not
+  .finally(() => stop loading indicator)
+  // so the loading indicator is always stopped before we process the result/error
+  .then(result => show result, err => show error)
+```
