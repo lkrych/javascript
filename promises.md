@@ -5,6 +5,9 @@
     * [Nesting Callbacks](#nesting-callbacks)
     * [Handling Errors](#handling-errors-in-callbacks)
 * [Promises](#promises)
+    * [Promise Constructor](#promise-constructor)
+    * [Promise Producers](#promise-producers)
+    * [Promise Consumers](#promise-consumers)
 
 ## Callbacks
 
@@ -131,3 +134,80 @@ function step3(error, script) {
 It does the same thing as the previous code, but now there is no deep nesting. Unfortunately though, this code is harder to read. Also, each of these step functions is not general. There is going to be a lot of clutter with this strategy. So what's the better solution? I promise I'll tell you. 😏
 
 ## Promises
+
+Promises follow a pattern we often see in programming:
+
+1. A **producer** does something that takes time. 
+2. A **consumer** wants the result of the producer.
+
+A **promise** is a a JavaScript object that links the producing and consuming code together. It allows the producer to take as much time as it needs to produce the promised result, and then it makes these results available to all the subscribed consumers.
+
+### Promise Constructor
+
+The constructor syntax for a promise object is:
+
+```javascript
+let promise =  new Promise(function(resolve, reject) {
+    //executor
+})
+```
+
+The function passed to `new Promise` is called the **executor**. When a new promise is created, the executor **runs automatically**. It **contains the producing code** which should eventually produce a result.
+
+The executor's arguments: `resolve` and `reject`, are callbacks provided by JavaScript itself. When the executor obtains the result, it should call one of these callbacks.
+
+* **resolve(value)** - if the job finished successfully.
+* **reject(error)** - if an error occurred.
+
+The promise object returned by the `new Promise` constructor has some internal properties:
+
+* **state** - initially `pending`, then changed to either `fulfilled` when resolve is called, or `rejected` when reject is called.
+* **result** - initially undefined, then changes to `value` when resolve is called, or `error` when reject is called. 
+
+### Promise Producers
+
+```javascript
+let promise = new Promise(function(resolve, reject) {
+
+  // after 1 second signal that the job is done with the result "done"
+  setTimeout(() => resolve("done"), 1000);
+});
+```
+
+```javascript
+let promise = new Promise(function(resolve, reject) {
+  // after 1 second signal that the job is finished with an error
+  setTimeout(() => reject(new Error("Whoops!")), 1000);
+});
+```
+
+The executor should only call one `resolve` or one `reject` call. Any state change is final, all the other calls are ignored.
+
+### Promise Consumers
+
+A promise object is the link between the executor (the consumer) and the consumers, which can receive results or an error. **Consuming functions can be registered** using the methods `.then`, `.catch`, or `.finally`. 
+
+```javascript
+promise.then(
+    function(result) {/* Handle a successful result*/},
+    function(error) {/*Handle an error*/}
+);
+```
+
+The first argument to `.then` is a function that runs when the promise is resolved and receives the result. The second argument of `.then` is a function that runs when the promise is rejected, and receives an error. 
+
+Let's look at a full example of a successfully resolved promise
+
+```javascript
+let promise = new Promise(function(resolve, reject) {
+  setTimeout(() => resolve("done!"), 1000);
+});
+
+// resolve runs the first function in .then
+promise.then(
+  result => alert(result), // shows "done!" after 1 second
+  error => alert(error) // doesn't run
+);
+```
+
+If we're interested in only successful completions then we can provide only one argument to `.then`.
