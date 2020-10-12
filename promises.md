@@ -8,6 +8,9 @@
     * [Promise Constructor](#promise-constructor)
     * [Promise Producers](#promise-producers)
     * [Promise Consumers](#promise-consumers)
+* [Promise Chaining](#promise-chaining)
+    * [Returning Promises](#returning-promises)
+* [Error Handling](#error-handling)
 
 ## Callbacks
 
@@ -241,3 +244,82 @@ new Promise((resolve, reject) => {
   // so the loading indicator is always stopped before we process the result/error
   .then(result => show result, err => show error)
 ```
+## Promise Chaining
+
+So, let's return to the problem we were motivated by when we were talking about callbacks. How do promises structure a sequence of async tasks?
+
+
+```javascript
+new Promise(function(resolve, reject) {
+    setTimeout(() => resolve(1), 1000);
+}).then(function(result) {
+    alert(result); //1
+    return result * 2;
+}).then(function(result) {
+    alert(result); //2
+    return result * 2;
+}).then(function(result) {
+    alert(result); //4
+    return result * 2;
+});
+```
+
+The result is passed through the chain of `.then` handlers. This whole thing works because a call to `promise.then` return sa promise, so that we can call the next `.then`.
+
+A classic promise error is when a programmer adds many `.then` calls to a single promise instead of chaining the calls.
+
+```javascript
+let promise = new Promise(function(resolve, reject) {
+  setTimeout(() => resolve(1), 1000);
+});
+
+promise.then(function(result) {
+  alert(result); // 1
+  return result * 2;
+});
+
+promise.then(function(result) {
+  alert(result); // 1
+  return result * 2;
+});
+
+promise.then(function(result) {
+  alert(result); // 1
+  return result * 2;
+});
+```
+What the code above does is add several handlers to one promise. They don't pass results to each other, they process it independently.
+
+### Returning Promises
+
+A handler, used in `.then` may create and return a promise. In this case, the handlers have to wait until it completes resolving. **Returning promises allows us to chain asynchronous actions.** 
+
+```javascript
+new Promise(function(resolve, reject) {
+
+  setTimeout(() => resolve(1), 1000);
+
+}).then(function(result) {
+
+  alert(result); // 1
+
+  return new Promise((resolve, reject) => { // (*)
+    setTimeout(() => resolve(result * 2), 1000);
+  });
+
+}).then(function(result) { // (**)
+
+  alert(result); // 2
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(result * 2), 1000);
+  });
+
+}).then(function(result) {
+
+  alert(result); // 4
+
+});
+```
+
+## Error Handling
