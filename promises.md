@@ -11,6 +11,7 @@
 * [Promise Chaining](#promise-chaining)
     * [Returning Promises](#returning-promises)
 * [Error Handling](#error-handling)
+* [Promise API](#promise-api)
 
 ## Callbacks
 
@@ -323,3 +324,28 @@ new Promise(function(resolve, reject) {
 ```
 
 ## Error Handling
+
+When a **promise rejects**, the **control jumps to the closest rejection handler**.
+
+```javascript
+fetch('/article/promise-chaining/user.json')
+  .then(response => response.json())
+  .then(user => fetch(`https://api.github.com/users/${user.name}`))
+  .then(response => response.json())
+  .then(githubUser => new Promise((resolve, reject) => {
+    let img = document.createElement('img');
+    img.src = githubUser.avatar_url;
+    img.className = "promise-avatar-example";
+    document.body.append(img);
+
+    setTimeout(() => {
+      img.remove();
+      resolve(githubUser);
+    }, 3000);
+  }))
+  .catch(error => alert(error.message));
+```
+
+Normally, the catch wouldn't trigger, but if there are any errors, it will throw an alert.
+
+So how does it work? The code of the promise executor has an invisible try/catch around it. If an exception happens, it gets caught and treated as a rejection.
