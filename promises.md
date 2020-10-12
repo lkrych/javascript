@@ -323,6 +323,22 @@ new Promise(function(resolve, reject) {
 });
 ```
 
+### Promise Job Queue
+
+```javascript
+let promise = Promise.resolve();
+
+promise.then(() => alert("promise done!"));
+
+alert("code finished"); // this alert shows first
+```
+
+Promise handling is always asynchronous because all promise actions are passed through the internal "promises job" queue, also called the microtask queue.
+
+This means that all `.then/.catch/.finally` handlers are run after the current code is finished. That means that if we need to guaranttee that a piece of code is executed after `.then/.catch/.finally`, we need to add it to a chained `.then` call.
+
+The queue is a first-in-first-out queue, and execution of a task is initiated only when nothing else is running.
+
 ## Error Handling
 
 When a **promise rejects**, the **control jumps to the closest rejection handler**.
@@ -349,3 +365,14 @@ fetch('/article/promise-chaining/user.json')
 Normally, the catch wouldn't trigger, but if there are any errors, it will throw an alert.
 
 So how does it work? The code of the promise executor has an invisible try/catch around it. If an exception happens, it gets caught and treated as a rejection.
+
+## Promise API
+
+
+1. **Promise.all(promises)** – waits for all promises to resolve and returns an array of their results. If any of the given promises rejects, it becomes the error of Promise.all, and all other results are ignored.
+2. **Promise.allSettled(promises)** (recently added method) – waits for all promises to settle and returns their results as an array of objects with:
+    status: "fulfilled" or "rejected"
+    value (if fulfilled) or reason (if rejected).
+3. **Promise.race(promises)** – waits for the first promise to settle, and its result/error becomes the outcome.
+4. **Promise.resolve(value)** – makes a resolved promise with the given value.
+5. **Promise.reject(error)** – makes a rejected promise with the given error.
